@@ -59,15 +59,21 @@ func countdownStreaming(client calculatorpub.CalculatorServiceClient, num int32)
 	log.Println("Countdown finished")
 }
 
-func averageNumbers(client calculatorpub.CalculatorServiceClient, numbers []int32) {
+func averageNumbers(client calculatorpub.CalculatorServiceClient, scanner *bufio.Scanner) {
 	stream, err := client.Average(context.Background())
 	if err != nil {
 		return
 	}
 
-	for _, num := range numbers {
+	for {
+		scanner.Scan()
+		a := scanner.Text()
+		if a == "" {
+			break
+		}
+		num, _ := strconv.Atoi(a)
 		err := stream.Send(&calculatorpub.AverageRequest{
-			Number: num,
+			Number: int32(num),
 		})
 		if err != nil {
 			break
@@ -173,17 +179,7 @@ func console(client calculatorpub.CalculatorServiceClient) {
 		case 3:
 			{
 				println("Input numbers: ")
-				var numbers []int32
-				for {
-					scanner.Scan()
-					a := scanner.Text()
-					if a == "" {
-						break
-					}
-					num, _ := strconv.Atoi(a)
-					numbers = append(numbers, int32(num))
-				}
-				averageNumbers(client, numbers)
+				averageNumbers(client, scanner)
 				break
 			}
 		case 4:
